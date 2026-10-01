@@ -10,8 +10,6 @@ Maulana Khadafi
 
 | Kode | Isi |
 | :--- | :--- |
-| **FR-01** | Sistem dapat menghitung persen diskon, nominal potongan, dan total akhir belanja. |
-| **FR-02** | Sistem menampilkan hasil total bayar yang harus dibayarkan pelanggan. |
 | **BR-01** | Belanja minimal Rp100.000 mendapat diskon 10%. |
 | **BR-02** | Member mendapat tambahan diskon 5% (hanya jika BR-01 terpenuhi). |
 | **BR-03** | Total potongan maksimal Rp25.000. |
