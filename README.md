@@ -8,63 +8,85 @@ Maulana Khadafi
 
 ## 1. Requirement & Business Rule
 
-| Kode | Isi | 
- | ----- | ----- | 
-| **FR-01** | Sistem dapat menentukan persentase diskon berdasarkan nilai belanja dan status keanggotaan. | 
-| **FR-02** | Sistem dapat menghitung nominal potongan harga dengan batasan kuota diskon maksimal. | 
-| **FR-03** | Sistem dapat menghitung total akhir yang harus dibayar oleh pelanggan. | 
-| **BR-01** | Total belanja minimal untuk mendapatkan diskon adalah Rp 100.000. Belanja di bawah Rp 100.000 mendapatkan diskon $0\%$. | 
-| **BR-02** | Pelanggan dengan status *member* (`membership == true`) dan belanja $\ge$ Rp 100.000 memperoleh diskon sebesar $15\%$ ($0.15$). | 
-| **BR-03** | Pelanggan tanpa *member* (`membership == false`) dan belanja $\ge$ Rp 100.000 memperoleh diskon sebesar $10\%$ ($0.10$). | 
-| **BR-04** | Nominal potongan diskon maksimal adalah Rp 25.000. Jika hasil perhitungan diskon melebihi Rp 25.000, maka potongan ditetapkan tepat Rp 25.000. | 
+| Kode | Isi |
+| :--- | :--- |
+| **FR-01** | Sistem dapat menghitung persen diskon, nominal potongan, dan total akhir belanja. |
+| **FR-02** | Sistem menampilkan hasil total bayar yang harus dibayarkan pelanggan. |
+| **BR-01** | Belanja minimal Rp100.000 mendapat diskon 10%. |
+| **BR-02** | Member mendapat tambahan diskon 5% (hanya jika BR-01 terpenuhi). |
+| **BR-03** | Total potongan maksimal Rp25.000. |
 
 ## 2. Input, Output, Abstraction
 
-| Aspek | Hasil Analisis | 
- | ----- | ----- | 
-| **Input** | `totalBelanja` (`double`), `membership` (`bool`) | 
-| **Output** | `totalBayar` (`double`), `potongan` (`double`), `persenDiskon` (`double`) | 
-| **Abstraction** | \- Fungsi `hitungPersenDiskon(totalBelanja, membership)`  \- Fungsi `hitungPotongan(diskon, totalBelanja)`  \- Fungsi `hitungTotalBayar(totalBelanja, membership)` | 
+| Aspek | Hasil Analisis |
+| :--- | :--- |
+| **Input** | `totalBelanja` (double), `membership` (bool) |
+| **Output** | `totalBayar` (double) |
+| **Abstraction** | `hitungPersenDiskon(totalBelanja, membership)`, `hitungPotongan(diskon, totalBelanja)`, `hitungTotalBayar(totalBelanja, membership)` |
 
 ## 3. Decomposition
 
 Hierarki fungsi dipecah secara modular untuk memenuhi aturan bisnis (*Single Responsibility Principle*):
 
 ```
+```text
 hitungTotalBayar
-├── hitungPersenDiskon   → Menentukan tarif diskon 0%, 10%, atau 15%      (BR-01, BR-02, BR-03)
-├── hitungPotongan       → Menghitung nominal diskon & capping Rp 25.000   (BR-04)
-└── hitungTotalBayar     → totalBelanja - potongan                        (FR-03)
+├── hitungPersenDiskon
+│   ├── cek minimal belanja Rp100.000         (BR-01)
+│   └── cek membership (+5% diskon jika true)  (BR-02)
+├── hitungPotongan
+│   ├── kalikan persen diskon * totalBelanja
+│   └── terapkan batas maksimal Rp25.000      (BR-03)
+└── kurangi totalBelanja dengan potongan
 
 ```
 
 ## 4. Flowchart Logika
 
 ```
-flowchart TD
-    START([START]) --> Input[/Input: totalBelanja, membership/]
-    Input --> CekBelanja{totalBelanja >= 100000?}
-    
-    CekBelanja -- Tidak --> DiskonNol[persen = 0.0]
-    CekBelanja -- Ya --> CekMember{membership == true?}
-    
-    CekMember -- Ya --> DiskonMember[persen = 0.15]
-    CekMember -- Tidak --> DiskonNonMember[persen = 0.10]
-    
-    DiskonNol --> HitungNominal[potongan = persen * totalBelanja]
-    DiskonMember --> HitungNominal
-    DiskonNonMember --> HitungNominal
-    
-    HitungNominal --> CekMaksimal{potongan >= 25000?}
-    
-    CekMaksimal -- Ya --> SetMax[potongan = 25000]
-    CekMaksimal -- Tidak --> KeepPotongan[potongan tetap]
-    
-    SetMax --> HitungAkhir[totalBayar = totalBelanja - potongan]
-    KeepPotongan --> HitungAkhir
-    
-    HitungAkhir --> Output[/Output: totalBayar/]
-    Output --> END([END])
+START
+                 |
+                 v
+   Input totalBelanja, membership
+                 |
+                 v
+      /---------------------\
+     < totalBelanja >= 100k? > ----- Tidak -----> diskon = 0
+      \---------------------/                        |
+                 |                                   |
+                Ya                                   |
+                 v                                   |
+         /---------------\                           |
+        <  membership ==  > --- Tidak -> diskon = 0.10
+        <     true?       >                           |
+         \---------------/                           |
+                 |                                   |
+                Ya                                   |
+                 v                                   |
+           diskon = 0.15                             |
+                 |                                   |
+                 +<----------------------------------+
+                 |
+                 v
+     potongan = diskon * totalBelanja
+                 |
+                 v
+        /-----------------\
+       < potongan >= 25k?  > ----- Ya -----> potongan = 25000
+        \-----------------/                      |
+                 |                               |
+               Tidak                             |
+                 |                               |
+                 +<------------------------------+
+                 |
+                 v
+   totalBayar = totalBelanja - potongan
+                 |
+                 v
+         Tampilkan totalBayar
+                 |
+                 v
+                END
 
 ```
 
